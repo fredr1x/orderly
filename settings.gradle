@@ -1,0 +1,8 @@
+rootProject.name = 'orderly'
+include('common-lib')
+include('api-gateway')
+include('eureka-server')
+include('user-service')
+include('geo-service')
+include('order-service')
+include('restaurant-service')

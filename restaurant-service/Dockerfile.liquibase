@@ -1,0 +1,7 @@
+FROM liquibase/liquibase:4.25
+
+COPY restaurant-service/src/main/resources/db/changelog /liquibase/changelog
+
+WORKDIR /liquibase
+
+ENTRYPOINT ["liquibase"]

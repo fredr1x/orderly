@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: user-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/orderly-users
+
+  datasource:
+    url: jdbc:postgresql://user-service-db:5432/orderly-users
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
+  instance:
+    hostname: user-service
+    prefer-ip-address: false
+
+keycloak:
+  username: admin
+  password: admin
+  server-url: http://keycloak:8080
+  realm: orderly-users
+  client-id: orderly-users
+  client-secret: A0YUR2JQYBFWcEEVK6bKh6MYRBWuWhJ7
+
+server:
+  port: 8082

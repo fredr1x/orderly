@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: geo-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/orderly-users
+
+  r2dbc:
+    url: r2dbc:postgresql://geo-service-db:5432/orderly-geo
+    username: postgres
+    password: postgres
+
+  datasource:
+    url: jdbc:postgresql://geo-service-db:5432/orderly-geo
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
+  instance:
+    hostname: geo-service
+    prefer-ip-address: false
+
+yandex:
+  http-geocoder:
+    api-key: ${YANDEX_GEO_API}
+
+server:
+  port: 8083

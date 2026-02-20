@@ -1,0 +1,183 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    command: start-dev
+    ports:
+      - "8081:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - keycloak_data:/opt/keycloak/data/
+    networks:
+      - orderly-net
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - orderly-net
+
+  eureka-server:
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    ports:
+      - "8761:8761"
+    networks:
+      - orderly-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  geo-service-db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: orderly-geo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5501:5432"
+    volumes:
+      - geo_volume:/var/lib/postgresql/data
+    networks:
+      - orderly-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orderly-geo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  geo-service-liquibase:
+    build:
+      context: .
+      dockerfile: geo-service/Dockerfile.liquibase
+    restart: "no"
+    depends_on:
+      geo-service-db:
+        condition: service_healthy
+    command:
+      - --changelog-file=/changelog/db.changelog-master.yaml
+      - --url=jdbc:postgresql://geo-service-db:5432/orderly-geo
+      - --username=postgres
+      - --password=postgres
+      - --driver=org.postgresql.Driver
+      - update
+    networks:
+      - orderly-net
+
+  geo-service:
+    build:
+      context: .
+      dockerfile: geo-service/Dockerfile
+    env_file:
+      - .env.geo-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      geo-service-liquibase:
+        condition: service_completed_successfully
+      eureka-server:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - orderly-net
+
+  user-service-db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: orderly-users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5500:5432"
+    volumes:
+      - users_volume:/var/lib/postgresql/data
+    networks:
+      - orderly-net
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env.user-service
+    depends_on:
+      - keycloak
+      - eureka-server
+      - user-service-db
+      - redis
+    networks:
+      - orderly-net
+
+  order-service-db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: orderly-orders
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5502:5432"
+    volumes:
+      - orders-volume:/var/lib/postgresql/data
+    networks:
+      - orderly-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orderly-geo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  order-service-liquibase:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile.liquibase
+    restart: "no"
+    depends_on:
+      - order-service-db
+    command:
+          - --changelog-file=/changelog/db.changelog-master.yaml
+          - --url=jdbc:postgresql://geo-service-db:5432/orderly-geo
+          - --username=postgres
+          - --password=postgres
+          - --driver=org.postgresql.Driver
+          - update
+    networks:
+      - orderly-net
+
+  order-service:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
+    ports:
+      - "8084:8084"
+    env_file:
+      - .env.order-service
+    depends_on:
+      - keycloak
+      - eureka-server
+      - order-service-db
+      - redis
+      - geo-service-liquibase:
+          condition: service_completed_successfully
+    networks:
+      - orderly-net
+
+volumes:
+  users_volume:
+  geo_volume:
+  keycloak_data:
+  orders-volume:
+
+networks:
+  orderly-net:
+    driver: bridge
