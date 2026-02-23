@@ -33,11 +33,9 @@ dependencies {
 
 	implementation project(':common-lib')
 
-	// Liquibase needs JDBC
 	implementation 'org.liquibase:liquibase-core'
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'  // ADD THIS
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 
-	// R2DBC for reactive runtime
 	implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
 	implementation 'org.postgresql:r2dbc-postgresql:1.1.1.RELEASE'
 

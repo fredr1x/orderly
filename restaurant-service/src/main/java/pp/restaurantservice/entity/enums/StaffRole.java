@@ -1,0 +1,11 @@
+package pp.restaurantservice.entity.enums;
+
+public enum StaffRole {
+    ROLE_RESTAURANT_OWNER,
+    ROLE_RESTAURANT_MANAGER,
+    ROLE_RESTAURANT_CHEF,
+    ROLE_RESTAURANT_WAITRESS,
+    ROLE_RESTAURANT_CASHIER,
+    ROLE_TECHNICAL_SUPPORT,
+    ROLE_RESTAURANT_STAFF,
+}
