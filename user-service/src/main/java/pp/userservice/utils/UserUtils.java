@@ -1,7 +1,7 @@
 package pp.userservice.utils;
 
 import lombok.experimental.UtilityClass;
-import pp.userservice.dto.RegisterUserRequest;
+import pp.commonlib.domain.RegisterUserRequest;
 import pp.userservice.entity.User;
 
 import java.time.Instant;
@@ -16,6 +16,7 @@ public class UserUtils {
                 .firstName(requestDto.getFirstName())
                 .lastName(requestDto.getLastName())
                 .email(requestDto.getEmail())
+                .phoneNumber(requestDto.getPhoneNumber())
                 .isActive(true)
                 .createdAt(Instant.now())
                 .build();

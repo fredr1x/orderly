@@ -33,3 +33,12 @@ eureka:
 
 server:
   port: 8085
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+
+logging:
+  level:
+    org.springframework.web: debug
+    reactor.netty.http.server: debug

@@ -24,6 +24,9 @@ public class RestaurantStaff {
     @Column("user_id")
     private UUID userId;
 
+    @Column("phone_number")
+    private String phoneNumber;
+
     @Column("restaurant_id")
     private Long restaurantId;
 

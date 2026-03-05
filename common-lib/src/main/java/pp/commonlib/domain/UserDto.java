@@ -1,4 +1,4 @@
-package pp.userservice.dto;
+package pp.commonlib.domain;
 
 import lombok.*;
 
@@ -14,6 +14,7 @@ public class UserDto {
     private Long id;
     private UUID keycloakId;
     private String email;
+    private String phoneNumber;
     private String firstName;
     private String lastName;
     private boolean isActive;
