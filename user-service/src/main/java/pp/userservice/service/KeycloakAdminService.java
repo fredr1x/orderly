@@ -11,10 +11,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import pp.userservice.dto.RegisterUserRequest;
+import pp.commonlib.domain.RegisterUserRequest;
+import pp.userservice.entity.enums.Value;
 import pp.userservice.exception.KeycloakException;
 import pp.userservice.property.KeycloakProperties;
-import pp.userservice.utils.RoleUtils;
 
 import java.util.List;
 
@@ -27,12 +27,12 @@ public class KeycloakAdminService {
     private final RestTemplate restTemplate;
 
     public String createUser(RegisterUserRequest requestDto) {
-
         var user = new UserRepresentation();
         user.setUsername(requestDto.getEmail());
         user.setFirstName(requestDto.getFirstName());
         user.setLastName(requestDto.getLastName());
         user.setEmail(requestDto.getEmail());
+        user.setEmailVerified(true);
         user.setEnabled(true);
 
         try {
@@ -40,13 +40,23 @@ public class KeycloakAdminService {
                     .users()
                     .create(user);
 
+            if (response.getStatus() == 409) {
+                throw new KeycloakException("User with this email already exists in Keycloak");
+            }
+
+            if (response.getStatus() != 201) {
+                throw new KeycloakException("Unexpected Keycloak response: " + response.getStatus());
+            }
+
             var keycloakId = response.getLocation().getPath()
                     .replaceAll(".*/([^/]+)$", "$1");
 
             setPassword(keycloakId, requestDto.getPassword());
-            assignRealmRole(keycloakId, RoleUtils.userRoleValue);
+            assignRealmRole(keycloakId, Value.ROLE_USER.name());
             return keycloakId;
 
+        } catch (KeycloakException e) {
+            throw e;
         } catch (Exception e) {
             throw new KeycloakException("Failed to create keycloak user: " + e.getMessage());
         }

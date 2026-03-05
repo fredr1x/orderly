@@ -5,9 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import pp.commonlib.domain.UserDto;
 import pp.userservice.dto.ChangePasswordRequest;
 import pp.userservice.dto.ChangeUserNameRequest;
-import pp.userservice.dto.UserDto;
 import pp.userservice.service.UserService;
 
 @RestController

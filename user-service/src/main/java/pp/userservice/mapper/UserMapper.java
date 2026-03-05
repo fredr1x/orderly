@@ -1,7 +1,7 @@
 package pp.userservice.mapper;
 
 import org.mapstruct.Mapper;
-import pp.userservice.dto.UserDto;
+import pp.commonlib.domain.UserDto;
 import pp.userservice.entity.User;
 
 @Mapper(componentModel = "spring")

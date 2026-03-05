@@ -5,8 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-import pp.userservice.dto.RegisterUserRequest;
-import pp.userservice.dto.UserDto;
+import pp.commonlib.domain.RegisterUserRequest;
+import pp.commonlib.domain.UserDto;
 import pp.userservice.service.AuthService;
 
 @RestController
@@ -18,7 +18,9 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<UserDto> me(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok().body(authService.getUserByKeycloakId(jwt.getSubject()));
+        return ResponseEntity
+                .ok()
+                .body(authService.getUserByKeycloakId(jwt.getSubject()));
     }
 
     @PostMapping("/register-user")
@@ -26,5 +28,19 @@ public class AuthController {
         return ResponseEntity
                 .ok()
                 .body(authService.registerUser(requestDto));
+    }
+
+    @PostMapping("/register-owner")
+    public ResponseEntity<UserDto> registerOwner(@RequestBody RegisterUserRequest requestDto) {
+        return ResponseEntity
+                .ok()
+                .body(authService.registerOwner(requestDto));
+    }
+
+    @PostMapping("/register-manager")
+    public ResponseEntity<UserDto> registerManager(@RequestBody RegisterUserRequest requestDto) {
+        return ResponseEntity
+                .ok()
+                .body(authService.registerManager(requestDto));
     }
 }

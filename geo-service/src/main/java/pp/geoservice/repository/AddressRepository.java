@@ -55,7 +55,7 @@ public interface AddressRepository extends R2dbcRepository<Address, Long> {
 
     @Query(
         """
-        SELECT * FROM addresses a 
+        SELECT * FROM addresses a
         WHERE a.formatted = :formatted
         """)
     Mono<Address> findByFormatted(@Param("formatted") String formatted);
