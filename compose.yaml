@@ -25,6 +25,25 @@ services:
     networks:
       - orderly-net
 
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_volume:/data
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      orderly-net:
+
   eureka-server:
     build:
       context: .
@@ -103,6 +122,11 @@ services:
       - "5500:5432"
     volumes:
       - users_volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d orderly-users" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - orderly-net
 
@@ -115,10 +139,16 @@ services:
     env_file:
       - .env.user-service
     depends_on:
-      - keycloak
-      - eureka-server
-      - user-service-db
-      - redis
+      user-service-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - orderly-net
 
@@ -231,10 +261,13 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - orderly-net
 
 volumes:
+  minio_volume:
   users_volume:
   geo_volume:
   keycloak_data:

@@ -1,6 +1,7 @@
 package pp.restaurantservice.utils;
 
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
@@ -30,5 +31,9 @@ public class JwtUtils {
                 .map(ctx -> (JwtAuthenticationToken) ctx.getAuthentication())
                 .map(AbstractOAuth2TokenAuthenticationToken::getToken)
                 .map(jwt -> UUID.fromString(jwt.getSubject()));
+    }
+
+    public static String extractSubject(Jwt jwt) {
+        return jwt.getSubject();
     }
 }

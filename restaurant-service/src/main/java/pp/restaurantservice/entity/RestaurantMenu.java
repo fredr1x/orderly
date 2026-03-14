@@ -26,7 +26,7 @@ public class RestaurantMenu {
     private MenuType type;
 
     @Column("is_active")
-    private Boolean isActive;
+    private boolean isActive = true;
 
     @Column("created_at")
     private LocalDateTime createdAt;
