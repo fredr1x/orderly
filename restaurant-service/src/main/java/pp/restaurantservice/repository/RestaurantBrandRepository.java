@@ -25,6 +25,16 @@ public interface RestaurantBrandRepository extends R2dbcRepository<RestaurantBra
 
     @Query(
         """
+        SELECT 1
+        FROM restaurant_brands rb
+        JOIN restaurants r ON r.brand_id = rb.id
+        WHERE r.brand_id = :brandId AND r.id = :restaurantId
+        """)
+    Mono<Integer> validateRelatedRestaurant(@Param("brandId") Long brandId,
+                                            @Param("restaurantId") Long restaurantId);
+
+    @Query(
+        """
         SELECT *
         FROM restaurant_brands rb
         WHERE rb.owner_user_id = :ownerUserId

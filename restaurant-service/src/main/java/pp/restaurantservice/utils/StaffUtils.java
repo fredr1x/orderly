@@ -33,6 +33,7 @@ public class StaffUtils {
                 .phoneNumber(request.getPhoneNumber())
                 .role(request.getRole())
                 .status(StaffStatus.PENDING_APPROVAL)
+                .hiredAt(Instant.now())
                 .build();
     }
 
@@ -54,18 +55,5 @@ public class StaffUtils {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .build();
-    }
-
-    public void validateStaffPermission(RestaurantStaff staff, StaffRole role) {
-        if (!staff.getRole().equals(role)) {
-            throw new RuntimeException("Not enough permissions");
-        }
-    }
-
-    public static void validateForOwnerOrManagerRole(RestaurantStaff staff) {
-        if (!Objects.equals(staff.getRole(), StaffRole.ROLE_RESTAURANT_OWNER) &&
-            !Objects.equals(staff.getRole(), StaffRole.ROLE_RESTAURANT_MANAGER)) {
-            throw new RuntimeException("Not enough permissions");
-        }
     }
 }

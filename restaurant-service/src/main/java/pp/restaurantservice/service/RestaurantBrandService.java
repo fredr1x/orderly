@@ -25,7 +25,6 @@ public class RestaurantBrandService {
     }
 
     public Mono<RestaurantBrandDto> findByOwnerUserId(UUID ownerUserId) {
-        System.out.println("OWNER USER ID: " + ownerUserId);
         return restaurantBrandRepository.findByOwnerUserId(ownerUserId)
                 .switchIfEmpty(Mono.error(() -> new RuntimeException("Brand not found")))
                 .map(restaurantBrandMapper::toRestaurantBrandDto);
@@ -53,6 +52,15 @@ public class RestaurantBrandService {
                                 ? Mono.empty()
                                 : Mono.error(() -> new RuntimeException("Not enough permissions to this brand"))
                         ));
+    }
+
+    public Mono<Void> validateRelatedRestaurant(Long brandId, Long restaurantId) {
+        return restaurantBrandRepository.validateRelatedRestaurant(brandId, restaurantId)
+                .hasElement()
+                .flatMap(exists -> exists
+                        ? Mono.empty()
+                        : Mono.error(() -> new RuntimeException("Not enough permissions"))
+                );
     }
 
     private Mono<Boolean> existsByName(String name) {

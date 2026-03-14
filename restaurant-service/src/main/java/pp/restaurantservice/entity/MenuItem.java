@@ -48,7 +48,7 @@ public class MenuItem {
     private Integer preparationTimeMinutes;
 
     @Column("is_available")
-    private Boolean isAvailable;
+    private boolean isAvailable = true;
 
     @Column("created_at")
     private LocalDateTime createdAt;

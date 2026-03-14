@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import pp.restaurantservice.dto.RestaurantManagerCreateRequest;
 import pp.restaurantservice.dto.RestaurantStaffCreateRequest;
@@ -20,6 +19,7 @@ import pp.restaurantservice.utils.StaffUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 import static pp.restaurantservice.utils.JwtUtils.ROLE_RESTAURANT_MANAGER;
@@ -72,10 +72,6 @@ public class RestaurantStaffService {
                 ));
     }
 
-    public Mono<RestaurantStaff> saveAndReturn(RestaurantStaff restaurantStaff) {
-        return restaurantStaffRepository.save(restaurantStaff);
-    }
-
     public Mono<RestaurantStaffDto> createStaff(String currentUserId,
                                                 RestaurantStaffCreateRequest request) {
 
@@ -124,6 +120,20 @@ public class RestaurantStaffService {
                 .map(restaurantStaffMapper::toRestaurantStaffDto);
     }
 
+    public Mono<Void> validateManager(String currentUserId, Long restaurantId) {
+        return findStaffByUserId(UUID.fromString(currentUserId))
+                .flatMap(staff -> {
+                    if (!staff.getRestaurantId().equals(restaurantId)) {
+                        return Mono.error(() -> new RuntimeException("You do not manage this restaurant"));
+                    }
+
+                    if (staff.getRole() != StaffRole.ROLE_RESTAURANT_MANAGER) {
+                        return Mono.error(() -> new RuntimeException("Not enough permission"));
+                    }
+                    return Mono.empty();
+                });
+    }
+
     private Mono<RestaurantStaff> updateStaffRole(RestaurantStaff staff, StaffRole newRole) {
         staff.setRole(newRole);
         return restaurantStaffRepository.save(staff);
@@ -133,20 +143,16 @@ public class RestaurantStaffService {
         return restaurantStaffRepository
                 .findByUserId(currentUserId)
                 .switchIfEmpty(Mono.error(new RuntimeException("Staff not found"))) // todo
-                .flatMap(staff -> {
-                    StaffUtils.validateStaffPermission(
-                            staff,
-                            StaffRole.ROLE_RESTAURANT_MANAGER
-                    );
-                    return Mono.empty();
-                });
+                .then();
     }
 
     public Mono<Void> validateStaffRoleAndSameRestaurant(UUID currentUserId, Long restaurantId) {
         return JwtUtils.extractRoles()
                 .flatMap(roles -> {
                     if (roles.contains(ROLE_RESTAURANT_OWNER)) {
-                        return restaurantBrandService.findByOwnerUserId(currentUserId);
+                        return restaurantBrandService.findByOwnerUserId(currentUserId)
+                                .flatMap(brand ->
+                                        restaurantBrandService.validateRelatedRestaurant(brand.getId(), restaurantId));
                     }
 
                     else if (roles.contains(ROLE_RESTAURANT_MANAGER)) {
@@ -156,28 +162,36 @@ public class RestaurantStaffService {
                                     else return Mono.error(() -> new RuntimeException("You do not manage this restaurant"));
                                 });
                     }
+
                     else return Mono.error(() -> new RuntimeException("Not enough permission"));
                 })
                 .then();
-
     }
 
     private Mono<RestaurantStaff> validateChangeRequest(UUID currentUserUuid, UUID targetStaffUuid) {
-        return findStaffByUserId(currentUserUuid)
-                .flatMap(currentStaff -> {
-                    if (currentStaff.getRole() != StaffRole.ROLE_RESTAURANT_MANAGER) {
-                        return Mono.error(new RuntimeException("User is not a manager"));
-                    }
-                    return findStaffByUserId(targetStaffUuid)
-                            .flatMap(targetStaff -> validateSameRestaurant(currentStaff, targetStaff));
-                });
-    }
+        return JwtUtils.extractRoles()
+                .flatMap(roles -> restaurantStaffRepository.findByUserId(targetStaffUuid)
+                        .flatMap(targetStaff -> {
+                            if (roles.contains(ROLE_RESTAURANT_OWNER)) {
+                                return restaurantBrandService.findByOwnerUserId(currentUserUuid)
+                                        .flatMap(brand ->
+                                                restaurantBrandService.validateRelatedRestaurant(brand.getId(), targetStaff.getRestaurantId()))
+                                        .thenReturn(targetStaff);
+                            }
 
-    private Mono<RestaurantStaff> validateSameRestaurant(RestaurantStaff manager, RestaurantStaff targetStaff) {
-        if (!manager.getRestaurantId().equals(targetStaff.getRestaurantId())) {
-            return Mono.error(new RuntimeException("Cannot change status of staff from another restaurant"));
-        }
-        return Mono.just(targetStaff);
+                            else if (roles.contains(ROLE_RESTAURANT_MANAGER)) {
+                                return findStaffByUserId(currentUserUuid)
+                                        .flatMap(manager -> {
+                                            if (Objects.equals(manager.getRestaurantId(), targetStaff.getRestaurantId()))
+                                                return Mono.just(targetStaff);
+                                            else
+                                                return Mono.error(new RuntimeException("You do not manage this staff"));
+                                        });
+                            }
+
+                            else return Mono.error(new RuntimeException("Not enough permissions"));
+                        })
+                );
     }
 
     private Mono<RestaurantStaff> updateStaffStatus(RestaurantStaff staff, StaffStatus newStatus) {
