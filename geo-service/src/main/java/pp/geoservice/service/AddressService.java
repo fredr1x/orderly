@@ -14,8 +14,8 @@ public class AddressService {
     private final AddressRepository addressRepository;
 
     public Mono<Address> findByLocation(double longitude, double latitude) {
-        return addressRepository.findByPointAndRadius(longitude, latitude, GeoUtils.DEFAULT_RADIUS_FOR_SEARCH)
-                .switchIfEmpty(addressRepository.findNearest(longitude, latitude));
+        return addressRepository.findByPointAndRadius(longitude, latitude, GeoUtils.DEFAULT_RADIUS_FOR_SEARCH);
+//                .switchIfEmpty(addressRepository.findNearest(longitude, latitude));
     }
 
     public Mono<Address> saveAddressAndReturn(Address address) {

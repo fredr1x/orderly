@@ -13,9 +13,6 @@ import java.util.UUID;
 @Component
 public class JwtUtils {
 
-    public static final String ROLE_RESTAURANT_OWNER = "ROLE_RESTAURANT_OWNER";
-    public static final String ROLE_RESTAURANT_MANAGER = "ROLE_RESTAURANT_MANAGER";
-
     public static Mono<List<String>> extractRoles() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(ctx -> (JwtAuthenticationToken) ctx.getAuthentication())

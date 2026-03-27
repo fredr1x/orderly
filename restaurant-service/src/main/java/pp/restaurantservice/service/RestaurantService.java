@@ -7,12 +7,16 @@ import pp.restaurantservice.entity.Restaurant;
 import pp.restaurantservice.entity.enums.RestaurantStatus;
 import pp.restaurantservice.mapper.RestaurantMapper;
 import pp.restaurantservice.repository.RestaurantRepository;
+import pp.restaurantservice.utils.JwtUtils;
 import pp.restaurantservice.utils.RestaurantUtils;
+import pp.restaurantservice.utils.RoleUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 import java.util.UUID;
+
+import static java.util.UUID.fromString;
 
 @Service
 @RequiredArgsConstructor
@@ -30,20 +34,43 @@ public class RestaurantService {
                 .switchIfEmpty(Mono.error(() -> new RuntimeException("Restaurant not found")));
     }
 
+    public Flux<RestaurantDto> findAllWithoutAddress(String currentUserId) {
+        return JwtUtils.extractRoles()
+                .flatMapMany(roles -> {
+                    if (roles.contains(RoleUtils.RESTAURANT_OWNER)) {
+                        return restaurantBrandService.findByOwnerUserId(fromString(currentUserId))
+                                .flatMapMany(brand ->
+                                        restaurantRepository.findAllWithoutAddress(brand.getId())
+                                )
+                                .map(restaurantMapper::toRestaurantDto);
+                    }
+
+                    if (roles.contains(RoleUtils.RESTAURANT_MANAGER)) {
+                        return restaurantStaffService.findStaffByUserId(fromString(currentUserId))
+                                .flatMapMany(staff ->
+                                        restaurantRepository.findAllWithoutAddressByRestaurantId(staff.getRestaurantId())
+                                )
+                                .map(restaurantMapper::toRestaurantDto);
+                    }
+
+                    return Mono.error(() -> new RuntimeException("Not enough permissions"));
+                });
+    }
+
     public Mono<RestaurantDto> saveAndReturn(Restaurant restaurant) {
         return restaurantRepository.save(restaurant)
                 .map(restaurantMapper::toRestaurantDto);
     }
 
     public Mono<RestaurantDto> createRestaurant(String currentUserId, RestaurantCreateRequest request) {
-        return restaurantBrandService.validateRelatedBrand(request.getBrandId(), UUID.fromString(currentUserId))
+        return restaurantBrandService.validateRelatedBrand(request.getBrandId(), fromString(currentUserId))
                 .then(restaurantRepository.save(RestaurantUtils.buildRestaurant(request))
                         .map(restaurantMapper::toRestaurantDto)
                 );
     }
 
     public Flux<RestaurantDto> findAllByBrandId(String currentUserId, Long brandId) {
-        return restaurantBrandService.findByOwnerUserId(UUID.fromString(currentUserId))
+        return restaurantBrandService.findByOwnerUserId(fromString(currentUserId))
                 .flatMapMany(brand ->
                         restaurantRepository.findAllByBrandId(brandId)
                                 .map(restaurantMapper::toRestaurantDto)
@@ -51,7 +78,7 @@ public class RestaurantService {
     }
 
     public Mono<RestaurantDto> updateRestaurant(String currentUserId, RestaurantUpdateRequest request) {
-        return restaurantStaffService.validateStaffRoleAndSameRestaurant(UUID.fromString(currentUserId), request.getRestaurantId())
+        return restaurantStaffService.validateStaffRoleAndSameRestaurant(fromString(currentUserId), request.getRestaurantId())
                 .then(restaurantRepository.findById(request.getRestaurantId())
                         .flatMap(restaurant -> {
                             restaurantMapper.updateRestaurantFromRequest(request, restaurant);
@@ -62,7 +89,7 @@ public class RestaurantService {
     }
 
     public Mono<RestaurantDto> updateRestaurantStatus(String currentUserId, RestaurantStatusUpdateRequest request) {
-        return restaurantStaffService.validateStaffRoleAndSameRestaurant(UUID.fromString(currentUserId), request.getRestaurantId())
+        return restaurantStaffService.validateStaffRoleAndSameRestaurant(fromString(currentUserId), request.getRestaurantId())
                 .then(restaurantRepository.findById(request.getRestaurantId())
                         .flatMap(restaurant -> {
                             restaurant.setStatus(request.getStatus());
@@ -73,7 +100,7 @@ public class RestaurantService {
     }
 
     public Mono<Void> deleteRestaurant(String currentUserId, Long restaurantId) {
-        return restaurantStaffService.validateStaffRoleAndSameRestaurant(UUID.fromString(currentUserId), restaurantId)
+        return restaurantStaffService.validateStaffRoleAndSameRestaurant(fromString(currentUserId), restaurantId)
                 .then(restaurantRepository.findById(restaurantId).
                         flatMap(restaurant -> {
                             restaurant.setStatus(RestaurantStatus.NON_ACTIVE);

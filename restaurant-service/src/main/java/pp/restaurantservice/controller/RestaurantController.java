@@ -30,6 +30,13 @@ public class RestaurantController {
         return restaurantService.findAllByBrandId(currentUserId, brandId);
     }
 
+    @GetMapping("/without-address")
+    @PreAuthorize("hasAnyRole('RESTAURANT_OWNER', 'RESTAURANT_MANAGER')")
+    public Flux<RestaurantDto> getAllWithoutAddress(@AuthenticationPrincipal Jwt jwt) {
+        var currentUserId = extractSubject(jwt);
+        return restaurantService.findAllWithoutAddress(currentUserId);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('RESTAURANT_OWNER')")
     public Mono<RestaurantDto> createRestaurant(@AuthenticationPrincipal Jwt jwt,
