@@ -7,6 +7,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import pp.restaurantservice.entity.enums.RestaurantStatus;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -45,8 +46,8 @@ public class Restaurant {
     private Integer ratingCount;
 
     @Column("created_at")
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column("updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

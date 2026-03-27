@@ -1,11 +1,14 @@
 package pp.restaurantservice.entity;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import pp.restaurantservice.entity.enums.RatingStatus;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -33,11 +36,12 @@ public class RestaurantRating {
     private String comment;
 
     @Column("status")
+    @Enumerated(EnumType.STRING)
     private RatingStatus status;
 
     @Column("created_at")
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column("updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }
