@@ -15,4 +15,6 @@ public class AddressDto {
     private String locality;
     private String street;
     private String house;
+    private double longitude;
+    private double latitude;
 }

@@ -6,7 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -47,8 +47,8 @@ public class RestaurantAddress {
     private String comment;
 
     @Column("created_at")
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column("updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

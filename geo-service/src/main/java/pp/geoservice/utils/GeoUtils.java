@@ -61,6 +61,8 @@ public class GeoUtils {
                 .locality(address.getLocality())
                 .street(address.getStreet())
                 .house(address.getHouse())
+                .longitude(address.getLocation().getX())
+                .latitude(address.getLocation().getY())
                 .build();
     }
 

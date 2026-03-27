@@ -46,6 +46,10 @@ public class UserAddressService {
         var userAddress = userAddressRepository.findByIdAndUser_Id(userAddressId, user.getId())
                 .orElseThrow(() -> new RuntimeException("User address not found"));
 
+        if (!userAddress.getUser().getKeycloakId().toString().equals(keycloakId)) {
+            throw new RuntimeException("You can not delete another user's address");
+        }
+
         userAddressRepository.delete(userAddress);
     }
 }

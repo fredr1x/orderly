@@ -26,7 +26,7 @@ public class UserAddressController {
 
     @DeleteMapping("/{userAddressId}")
     public ResponseEntity<Void> deleteUserAddress(@AuthenticationPrincipal Jwt jwt,
-                                                  @PathVariable("userAddressId") Long userAddressId) {
+                                                  @PathVariable Long userAddressId) {
         userAddressService.deleteUserAddress(jwt.getSubject(), userAddressId);
         return ResponseEntity.noContent().build();
     }
