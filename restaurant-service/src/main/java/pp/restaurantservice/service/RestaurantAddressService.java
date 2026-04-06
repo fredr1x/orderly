@@ -2,6 +2,7 @@ package pp.restaurantservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import pp.restaurantservice.constants.RoleConstants;
 import pp.restaurantservice.dto.RestaurantAddressCreateRequest;
 import pp.restaurantservice.dto.RestaurantAddressDto;
 import pp.restaurantservice.dto.RestaurantAddressUpdateRequest;
@@ -9,7 +10,6 @@ import pp.restaurantservice.entity.RestaurantAddress;
 import pp.restaurantservice.mapper.RestaurantAddressMapper;
 import pp.restaurantservice.repository.RestaurantAddressRepository;
 import pp.restaurantservice.utils.JwtUtils;
-import pp.restaurantservice.utils.RoleUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -49,7 +49,7 @@ public class RestaurantAddressService {
 
     public Flux<RestaurantAddressDto> findAllByBrandId(Long brandId) {
         return restaurantBrandService.findById(brandId)
-                .flatMapMany(brand -> restaurantAddressRepository.findAllByBrandId(brand.getId())
+                .flatMapMany(brand -> restaurantAddressRepository.findAllByBrandId(brand.id())
                         .map(restaurantAddressMapper::toRestaurantAddressDto)
                 );
     }
@@ -109,13 +109,13 @@ public class RestaurantAddressService {
     private Mono<Void> validateUpdatePermissions(UUID currentUserId, RestaurantAddress address) {
         return JwtUtils.extractRoles()
                 .flatMap(roles -> {
-                    if (roles.contains(RoleUtils.RESTAURANT_OWNER)) {
+                    if (roles.contains(RoleConstants.RESTAURANT_OWNER)) {
                         return restaurantBrandService.findByOwnerUserId(currentUserId)
                                 .flatMap(brand -> restaurantBrandService
-                                        .validateRelatedRestaurant(brand.getId(), address.getRestaurantId()));
+                                        .validateRelatedRestaurant(brand.id(), address.getRestaurantId()));
                     }
 
-                    if (roles.contains(RoleUtils.RESTAURANT_MANAGER)) {
+                    if (roles.contains(RoleConstants.RESTAURANT_MANAGER)) {
                         return restaurantStaffService.findStaffByUserId(currentUserId)
                                 .flatMap(staff -> {
                                     if (Objects.equals(staff.getRestaurantId(), address.getRestaurantId())) {

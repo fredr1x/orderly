@@ -6,17 +6,14 @@ import pp.restaurantservice.entity.enums.StaffStatus;
 
 import java.time.Instant;
 
-@Getter
-@Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RestaurantStaffDto {
-    private Long id;
-    private String userId;
-    private Long restaurantId;
-    private StaffRole role;
-    private StaffStatus status;
-    private Instant hiredAt;
-    private Instant firedAt;
-}
+public record RestaurantStaffDto(
+    Long id,
+    String userId,
+    Long restaurantId,
+    StaffRole role,
+    StaffStatus status,
+    Instant hiredAt,
+    Instant firedAt
+)
+{}

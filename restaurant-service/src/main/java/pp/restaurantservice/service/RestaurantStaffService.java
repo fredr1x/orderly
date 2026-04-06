@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import pp.restaurantservice.dto.RestaurantManagerCreateRequest;
+import pp.restaurantservice.constants.RoleConstants;
 import pp.restaurantservice.dto.RestaurantStaffCreateRequest;
 import pp.restaurantservice.dto.RestaurantStaffDto;
 import pp.restaurantservice.entity.RestaurantStaff;
@@ -15,7 +15,6 @@ import pp.restaurantservice.mapper.RestaurantStaffMapper;
 import pp.restaurantservice.repository.RestaurantStaffRepository;
 import pp.restaurantservice.service.client.UserServiceClient;
 import pp.restaurantservice.utils.JwtUtils;
-import pp.restaurantservice.utils.RoleUtils;
 import pp.restaurantservice.utils.StaffUtils;
 import reactor.core.publisher.Mono;
 
@@ -83,11 +82,14 @@ public class RestaurantStaffService {
                         .map(restaurantStaffMapper::toRestaurantStaffDto));
     }
 
-    public Mono<RestaurantStaffDto> createManager(String currentUserId, RestaurantManagerCreateRequest request) {
+    public Mono<RestaurantStaffDto> createManager(String currentUserId, RestaurantStaffCreateRequest request) {
         var currentUserUUID = UUID.fromString(currentUserId);
-        return validateStaffRoleAndSameRestaurant(currentUserUUID, request.getRestaurantId())
+        return validateStaffRoleAndSameRestaurant(currentUserUUID, request.restaurantId())
                 .then(userServiceClient.createManager(StaffUtils.buildRegisterUserRequest(request)))
                 .flatMap(user -> {
+                    if (request.role() != StaffRole.ROLE_RESTAURANT_MANAGER)
+                        return Mono.error(() -> new RuntimeException("Role mismatch to create manager"));
+
                     var staff = StaffUtils.buildRestaurantStaff(user.getKeycloakId(), request);
                     return restaurantStaffRepository.save(staff)
                             .map(restaurantStaffMapper::toRestaurantStaffDto);
@@ -148,13 +150,13 @@ public class RestaurantStaffService {
     public Mono<Void> validateStaffRoleAndSameRestaurant(UUID currentUserId, Long restaurantId) {
         return JwtUtils.extractRoles()
                 .flatMap(roles -> {
-                    if (roles.contains(RoleUtils.RESTAURANT_OWNER)) {
+                    if (roles.contains(RoleConstants.RESTAURANT_OWNER)) {
                         return restaurantBrandService.findByOwnerUserId(currentUserId)
                                 .flatMap(brand ->
-                                        restaurantBrandService.validateRelatedRestaurant(brand.getId(), restaurantId));
+                                        restaurantBrandService.validateRelatedRestaurant(brand.id(), restaurantId));
                     }
 
-                    else if (roles.contains(RoleUtils.RESTAURANT_MANAGER)) {
+                    else if (roles.contains(RoleConstants.RESTAURANT_MANAGER)) {
                         return findStaffByUserId(currentUserId)
                                 .flatMap(staff -> {
                                     if (staff.getRestaurantId().equals(restaurantId)) return Mono.empty();
@@ -171,14 +173,14 @@ public class RestaurantStaffService {
         return JwtUtils.extractRoles()
                 .flatMap(roles -> restaurantStaffRepository.findByUserId(targetStaffUuid)
                         .flatMap(targetStaff -> {
-                            if (roles.contains(RoleUtils.RESTAURANT_OWNER)) {
+                            if (roles.contains(RoleConstants.RESTAURANT_OWNER)) {
                                 return restaurantBrandService.findByOwnerUserId(currentUserUuid)
                                         .flatMap(brand ->
-                                                restaurantBrandService.validateRelatedRestaurant(brand.getId(), targetStaff.getRestaurantId()))
+                                                restaurantBrandService.validateRelatedRestaurant(brand.id(), targetStaff.getRestaurantId()))
                                         .thenReturn(targetStaff);
                             }
 
-                            else if (roles.contains(RoleUtils.RESTAURANT_MANAGER)) {
+                            else if (roles.contains(RoleConstants.RESTAURANT_MANAGER)) {
                                 return findStaffByUserId(currentUserUuid)
                                         .flatMap(manager -> {
                                             if (Objects.equals(manager.getRestaurantId(), targetStaff.getRestaurantId()))

@@ -6,7 +6,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-import pp.restaurantservice.dto.*;
+import pp.restaurantservice.dto.RestaurantStaffChangeRoleRequest;
+import pp.restaurantservice.dto.RestaurantStaffChangeStatusRequest;
+import pp.restaurantservice.dto.RestaurantStaffCreateRequest;
+import pp.restaurantservice.dto.RestaurantStaffDto;
 import pp.restaurantservice.service.RestaurantStaffService;
 import reactor.core.publisher.Mono;
 
@@ -42,7 +45,7 @@ public class RestaurantStaffController {
     @PostMapping("/manager")
     @PreAuthorize("hasRole('RESTAURANT_OWNER')")
     public Mono<RestaurantStaffDto> createManager(@AuthenticationPrincipal Jwt jwt,
-                                                  @RequestBody RestaurantManagerCreateRequest request) {
+                                                  @RequestBody RestaurantStaffCreateRequest request) {
         var currentUserId = extractSubject(jwt);
         return restaurantStaffService.createManager(currentUserId, request);
     }
@@ -53,7 +56,7 @@ public class RestaurantStaffController {
                                                  @AuthenticationPrincipal Jwt jwt,
                                                  @RequestBody RestaurantStaffChangeStatusRequest request) {
         var currentUserId = extractSubject(jwt);
-        return restaurantStaffService.changeStaffStatus(staffId, currentUserId, request.getStatus());
+        return restaurantStaffService.changeStaffStatus(staffId, currentUserId, request.status());
     }
 
     @PatchMapping("/{staffId}/role")
@@ -62,6 +65,6 @@ public class RestaurantStaffController {
                                                @AuthenticationPrincipal Jwt jwt,
                                                @RequestBody RestaurantStaffChangeRoleRequest request) {
         var currentUserId = extractSubject(jwt);
-        return restaurantStaffService.changeStaffRole(staffId, currentUserId, request.getRole());
+        return restaurantStaffService.changeStaffRole(staffId, currentUserId, request.role());
     }
 }

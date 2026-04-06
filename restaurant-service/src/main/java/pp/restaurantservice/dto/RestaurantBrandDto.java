@@ -1,17 +1,14 @@
 package pp.restaurantservice.dto;
 
-import lombok.*;
+import lombok.Builder;
 
 import java.util.UUID;
 
-@Getter
-@Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RestaurantBrandDto {
-    private Long id;
-    private String name;
-    private String description;
-    private UUID ownerUserId;
-}
+public record RestaurantBrandDto(
+    Long id,
+    String name,
+    String description,
+    UUID ownerUserId
+)
+{}

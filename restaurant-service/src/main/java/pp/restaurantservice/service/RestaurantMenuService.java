@@ -42,15 +42,15 @@ public class RestaurantMenuService {
     }
 
     public Mono<RestaurantMenuDto> createMenu(String currentUserId, RestaurantMenuCreateRequest request) {
-        return restaurantStaffService.validateManager(currentUserId, request.getRestaurantId())
+        return restaurantStaffService.validateManager(currentUserId, request.restaurantId())
                 .then(restaurantMenuRepository.save(buildRestaurant(request)))
                 .map(restaurantMenuMapper::toRestaurantMenuDto);
     }
 
     public Mono<RestaurantMenuDto> updateMenuType(String currentUserId, RestaurantMenuTypeUpdatedRequest request) {
-        return findAccessibleMenu(fromString(currentUserId), request.getMenuId())
+        return findAccessibleMenu(fromString(currentUserId), request.menuId())
                 .flatMap(menu -> {
-                    menu.setType(request.getMenuType());
+                    menu.setType(request.menuType());
                     menu.setUpdatedAt(LocalDateTime.now());
                     return restaurantMenuRepository.save(menu);
                 })
@@ -58,7 +58,7 @@ public class RestaurantMenuService {
     }
 
     public Mono<RestaurantMenuDto> changeMenuStatus(String currentUserId, RestaurantMenuChangeStatusRequest request) {
-        return findAccessibleMenu(fromString(currentUserId), request.getMenuId())
+        return findAccessibleMenu(fromString(currentUserId), request.menuId())
                 .flatMap(menu -> {
                     menu.setActive(request.isActive());
                     menu.setUpdatedAt(LocalDateTime.now());

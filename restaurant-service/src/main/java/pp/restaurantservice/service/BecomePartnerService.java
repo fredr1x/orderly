@@ -26,12 +26,12 @@ public class BecomePartnerService {
                 .flatMap(user ->
                         restaurantBrandService.createBrand(
                                 user.getKeycloakId().toString(),
-                                request.getBrandName(),
-                                request.getBrandDescription()
+                                request.brandName(),
+                                request.brandDescription()
                         ).map(brand -> buildPartnerContext(user, brand))
                 )
                 .flatMap(ctx -> {
-                    var restaurant = RestaurantUtils.buildRestaurant(ctx.getBrand().getId(), request);
+                    var restaurant = RestaurantUtils.buildRestaurant(ctx.getBrand().id(), request);
 
                     return restaurantService.saveAndReturn(restaurant)
                             .map(r -> BrandUtils.buildBecomePartnerResponse(ctx.getBrand(), restaurant));

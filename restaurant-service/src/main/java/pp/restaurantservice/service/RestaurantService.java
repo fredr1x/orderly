@@ -2,14 +2,17 @@ package pp.restaurantservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import pp.restaurantservice.dto.*;
+import pp.restaurantservice.constants.RoleConstants;
+import pp.restaurantservice.dto.RestaurantCreateRequest;
+import pp.restaurantservice.dto.RestaurantDto;
+import pp.restaurantservice.dto.RestaurantStatusUpdateRequest;
+import pp.restaurantservice.dto.RestaurantUpdateRequest;
 import pp.restaurantservice.entity.Restaurant;
 import pp.restaurantservice.entity.enums.RestaurantStatus;
 import pp.restaurantservice.mapper.RestaurantMapper;
 import pp.restaurantservice.repository.RestaurantRepository;
 import pp.restaurantservice.utils.JwtUtils;
 import pp.restaurantservice.utils.RestaurantUtils;
-import pp.restaurantservice.utils.RoleUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -37,15 +40,15 @@ public class RestaurantService {
     public Flux<RestaurantDto> findAllWithoutAddress(String currentUserId) {
         return JwtUtils.extractRoles()
                 .flatMapMany(roles -> {
-                    if (roles.contains(RoleUtils.RESTAURANT_OWNER)) {
+                    if (roles.contains(RoleConstants.RESTAURANT_OWNER)) {
                         return restaurantBrandService.findByOwnerUserId(fromString(currentUserId))
                                 .flatMapMany(brand ->
-                                        restaurantRepository.findAllWithoutAddress(brand.getId())
+                                        restaurantRepository.findAllWithoutAddress(brand.id())
                                 )
                                 .map(restaurantMapper::toRestaurantDto);
                     }
 
-                    if (roles.contains(RoleUtils.RESTAURANT_MANAGER)) {
+                    if (roles.contains(RoleConstants.RESTAURANT_MANAGER)) {
                         return restaurantStaffService.findStaffByUserId(fromString(currentUserId))
                                 .flatMapMany(staff ->
                                         restaurantRepository.findAllWithoutAddressByRestaurantId(staff.getRestaurantId())
@@ -63,7 +66,7 @@ public class RestaurantService {
     }
 
     public Mono<RestaurantDto> createRestaurant(String currentUserId, RestaurantCreateRequest request) {
-        return restaurantBrandService.validateRelatedBrand(request.getBrandId(), fromString(currentUserId))
+        return restaurantBrandService.validateRelatedBrand(request.brandId(), fromString(currentUserId))
                 .then(restaurantRepository.save(RestaurantUtils.buildRestaurant(request))
                         .map(restaurantMapper::toRestaurantDto)
                 );
@@ -78,8 +81,8 @@ public class RestaurantService {
     }
 
     public Mono<RestaurantDto> updateRestaurant(String currentUserId, RestaurantUpdateRequest request) {
-        return restaurantStaffService.validateStaffRoleAndSameRestaurant(fromString(currentUserId), request.getRestaurantId())
-                .then(restaurantRepository.findById(request.getRestaurantId())
+        return restaurantStaffService.validateStaffRoleAndSameRestaurant(fromString(currentUserId), request.restaurantId())
+                .then(restaurantRepository.findById(request.restaurantId())
                         .flatMap(restaurant -> {
                             restaurantMapper.updateRestaurantFromRequest(request, restaurant);
                             return restaurantRepository.save(restaurant)
@@ -89,10 +92,10 @@ public class RestaurantService {
     }
 
     public Mono<RestaurantDto> updateRestaurantStatus(String currentUserId, RestaurantStatusUpdateRequest request) {
-        return restaurantStaffService.validateStaffRoleAndSameRestaurant(fromString(currentUserId), request.getRestaurantId())
-                .then(restaurantRepository.findById(request.getRestaurantId())
+        return restaurantStaffService.validateStaffRoleAndSameRestaurant(fromString(currentUserId), request.restaurantId())
+                .then(restaurantRepository.findById(request.restaurantId())
                         .flatMap(restaurant -> {
-                            restaurant.setStatus(request.getStatus());
+                            restaurant.setStatus(request.status());
                             return restaurantRepository.save(restaurant)
                                     .map(restaurantMapper::toRestaurantDto);
                         })

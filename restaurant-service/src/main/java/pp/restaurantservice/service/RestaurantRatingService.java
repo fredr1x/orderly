@@ -102,13 +102,13 @@ public class RestaurantRatingService {
 
     public Mono<RestaurantRatingDto> updateStatus(String currentUserId, Long id, RestaurantRatingStatusUpdateRequest request) {
         return findById(id)
-                .flatMap(restaurantRating -> {
-                    restaurantStaffService.validateManager(currentUserId, request.restaurantId());
-                    restaurantRating.setStatus(request.status());
-
-                    return restaurantRatingRepository.save(restaurantRating)
-                            .map(restaurantRatingMapper::toRestaurantRatingDto);
-                });
+                .flatMap(rating ->
+                        restaurantStaffService.validateManager(currentUserId, rating.getRestaurantId())
+                                .thenReturn(rating)
+                )
+                .doOnNext(restaurantRating -> restaurantRating.setStatus(request.status()))
+                .flatMap(restaurantRatingRepository::save)
+                .map(restaurantRatingMapper::toRestaurantRatingDto);
     }
 
     public Mono<Void> deleteRating(String currentUserId, Long id) {
