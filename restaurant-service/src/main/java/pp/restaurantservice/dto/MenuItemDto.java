@@ -7,25 +7,22 @@ import pp.restaurantservice.entity.enums.MenuItemType;
 
 import java.math.BigDecimal;
 
-@Getter
-@Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class MenuItemDto {
-    private Long id;
-    private Long menuId;
-    private String name;
-    private String description;
-    private MenuItemType menuItemType;
+public record MenuItemDto(
+    Long id,
+    Long menuId,
+    String name,
+    String description,
+    MenuItemType menuItemType,
 
     @JsonSerialize(using = ToStringSerializer.class)
-    private BigDecimal price;
+    BigDecimal price,
 
     @JsonSerialize(using = ToStringSerializer.class)
-    private BigDecimal weightGrams;
+    BigDecimal weightGrams,
 
-    private Integer calories;
-    private Integer preparationTimeMinutes;
-    private boolean isAvailable;
-}
+    Integer calories,
+    Integer preparationTimeMinutes,
+    boolean isAvailable
+)
+{}

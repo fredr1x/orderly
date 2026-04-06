@@ -1,12 +1,10 @@
 package pp.restaurantservice.repository;
 
-import org.reactivestreams.Publisher;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;
 import pp.restaurantservice.entity.Restaurant;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Repository
 public interface RestaurantRepository extends R2dbcRepository<Restaurant, Long> {

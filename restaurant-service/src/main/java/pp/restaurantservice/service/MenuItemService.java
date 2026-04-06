@@ -37,14 +37,14 @@ public class MenuItemService {
     }
 
     public Mono<MenuItemDto> createMenuItem(String currentUserId, MenuItemCreateRequest request, FilePart filePart) {
-        return restaurantMenuService.findAccessibleMenu(UUID.fromString(currentUserId), request.getMenuId())
+        return restaurantMenuService.findAccessibleMenu(UUID.fromString(currentUserId), request.menuId())
                 .flatMap(menu -> minioService.uploadMenuItemPhoto(filePart, menu.getRestaurantId(), menu.getId())
                         .flatMap(imageUrl -> menuItemRepository.save(MenuItemUtils.buildMenuItem(request, imageUrl))
                                 .map(menuItemMapper::toMenuItemDto)));
     }
 
     public Mono<MenuItemDto> updateMenuItem(String currentUserId, MenuItemUpdateRequest request) {
-        return findAccessibleMenuItem(currentUserId, request.getId())
+        return findAccessibleMenuItem(currentUserId, request.id())
                 .flatMap(menuItem -> {
                     menuItemMapper.updateMenuItemFromRequest(request, menuItem);
                     return menuItemRepository.save(menuItem)

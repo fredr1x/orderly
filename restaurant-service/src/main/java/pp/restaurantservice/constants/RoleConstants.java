@@ -1,9 +1,6 @@
-package pp.restaurantservice.utils;
+package pp.restaurantservice.constants;
 
-import lombok.experimental.UtilityClass;
-
-@UtilityClass
-public class RoleUtils {
+public class RoleConstants {
     public static final String RESTAURANT_OWNER = "ROLE_RESTAURANT_OWNER";
     public static final String RESTAURANT_MANAGER = "ROLE_RESTAURANT_MANAGER";
 }

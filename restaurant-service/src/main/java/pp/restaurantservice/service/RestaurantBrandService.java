@@ -46,7 +46,7 @@ public class RestaurantBrandService {
 
     public Mono<Void> validateRelatedBrand(Long brandId, UUID ownerUserId) {
         return findById(brandId)
-                .flatMap(brand -> restaurantBrandRepository.validatedRelationship(brand.getId(), ownerUserId)
+                .flatMap(brand -> restaurantBrandRepository.validatedRelationship(brand.id(), ownerUserId)
                         .hasElement()
                         .flatMap(exists -> exists
                                 ? Mono.empty()

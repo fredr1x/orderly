@@ -12,22 +12,22 @@ public class RestaurantUtils {
     public Restaurant buildRestaurant(Long brandId, BecomePartnerRequest request) {
         return Restaurant.builder()
                 .brandId(brandId)
-                .name(request.getBrandName())
+                .name(request.brandName())
                 .status(RestaurantStatus.PENDING_APPROVAL)
-                .email(request.getEmail())
-                .instagramProfileLink(request.getImageProfileLink())
-                .phoneNumber(request.getPhoneNumber())
+                .email(request.email())
+                .instagramProfileLink(request.imageProfileLink())
+                .phoneNumber(request.phoneNumber())
                 .build();
     }
 
     public Restaurant buildRestaurant(RestaurantCreateRequest request) {
         return Restaurant.builder()
-                .brandId(request.getBrandId())
-                .name(request.getName())
+                .brandId(request.brandId())
+                .name(request.name())
                 .status(RestaurantStatus.PENDING_APPROVAL)
-                .email(request.getEmail())
-                .instagramProfileLink(request.getInstagramProfileLink())
-                .phoneNumber(request.getPhoneNumber())
+                .email(request.email())
+                .instagramProfileLink(request.instagramProfileLink())
+                .phoneNumber(request.phoneNumber())
                 .build();
     }
 }
