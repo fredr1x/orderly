@@ -27,8 +27,7 @@ eureka:
     service-url:
       defaultZone: http://eureka-server:8761/eureka
   instance:
-    hostname: geo-service
-    prefer-ip-address: false
+    prefer-ip-address: true
 
 yandex:
   http-geocoder:

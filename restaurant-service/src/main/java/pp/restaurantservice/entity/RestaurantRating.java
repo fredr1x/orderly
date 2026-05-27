@@ -9,7 +9,6 @@ import org.springframework.data.relational.core.mapping.Table;
 import pp.restaurantservice.entity.enums.RatingStatus;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter

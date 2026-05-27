@@ -23,19 +23,29 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
 
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
 eureka:
   client:
     service-url:
       defaultZone: http://eureka-server:8761/eureka
   instance:
-    hostname: restaurant-service
-    prefer-ip-address: false
+    prefer-ip-address: true
 
 minio:
   endpoint: http://minio:9000
   access-key: minioadmin
   secret-key: minioadmin
   bucket-name: restaurant-menu-items
+
+kafka:
+  payment-topic: "payment-events"
+  order-topic: "order-events"
+  restaurant-topic: "restaurant-events"
 
 server:
   port: 8085

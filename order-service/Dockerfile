@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY settings.gradle build.gradle ./
 COPY common-lib common-lib
-COPY order-service geo-service
+COPY order-service order-service
 
 RUN gradle :order-service:bootJar -x test --no-daemon
 
