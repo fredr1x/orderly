@@ -1,0 +1,14 @@
+package pp.commonlib.domain.enums;
+
+public enum OrderStatus {
+    PENDING_PAYMENT,
+    PAYMENT_FAILED,
+    AWAITING_RESTAURANT_CONFIRMATION,
+    RESTAURANT_REJECTED,
+    RESTAURANT_CONFIRMED,
+    RESTAURANT_PREPARING,
+    READY,
+    DELIVERING,
+    COMPLETED,
+    CANCELLED
+}

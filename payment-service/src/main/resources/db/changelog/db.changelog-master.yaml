@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: sql/create-payment-table-07-05-2026.sql
+  - include:
+      file: sql/remove-enum-make-varchar-26-05-2026-18-35.sql
+  - include:
+      file: sql/add-unique-constraint-for-payment-27-05-2026-10-41.sql

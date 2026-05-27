@@ -1,1 +1,46 @@
-spring.application.name=order-service
+spring:
+  application:
+    name: order-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/orderly-users
+
+  r2dbc:
+    url: r2dbc:postgresql://order-service-db:5432/orderly-orders
+    username: postgres
+    password: postgres
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+kafka:
+  payment-topic: "payment-events"
+  order-topic: "order-events"
+
+logging:
+  level:
+    root: info
+  file:
+    name: order-service-logs
+    path: /logs
+
+server:
+  port: 8084
+  address: 0.0.0.0
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always

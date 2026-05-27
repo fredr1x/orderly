@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: payment-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/orderly-users
+
+  r2dbc:
+    url: r2dbc:postgresql://payment-service-db:5432/orderly-payments
+    username: postgres
+    password: postgres
+
+  datasource:
+    url: jdbc:postgresql://payment-service-db:5432/orderly-payments
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+kafka:
+  payment-topic: "payment-events"
+
+logging:
+  level:
+    root: info
+  file:
+    name: payment-service-logs
+    path: /logs
+
+server:
+  port: 8086
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
