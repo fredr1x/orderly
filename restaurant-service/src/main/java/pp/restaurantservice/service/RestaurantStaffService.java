@@ -19,6 +19,8 @@ import pp.restaurantservice.utils.StaffUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -164,7 +166,12 @@ public class RestaurantStaffService {
                                 });
                     }
 
-                    else return Mono.error(() -> new RuntimeException("Not enough permission"));
+                    else return findStaffByUserId(currentUserId)
+                                .flatMap(staff -> {
+                                    if (staff.getRestaurantId().equals(restaurantId)) return Mono.empty();
+                                    else return Mono.error(() -> new RuntimeException("You are not staff of this restaurant"));
+                                })
+                                .switchIfEmpty(Mono.error(() -> new RuntimeException("Not enough permissions")));
                 })
                 .then();
     }
