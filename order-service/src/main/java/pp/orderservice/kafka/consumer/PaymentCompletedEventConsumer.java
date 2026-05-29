@@ -58,11 +58,6 @@ public class PaymentCompletedEventConsumer {
                                 .map(items -> OrderUtils.buildOrderPaidEvent(order, items))
                                 .flatMap(orderPaidEventPublisher::publishOrderPaidEvent)
                 )
-                .onErrorResume(error -> {
-                    log.error("Error processing payment event for orderId: {}",
-                            event.orderId(), error);
-                    return Mono.empty();
-                })
                 .then();
     }
 }

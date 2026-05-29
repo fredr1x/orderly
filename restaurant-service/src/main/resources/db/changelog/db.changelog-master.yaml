@@ -1,4 +1,7 @@
 databaseChangeLog:
-  - includeAll:
-      path: sql/
-      relativeToChangelogFile: true
+  - include:
+      file: sql/create-restaurant-order-tables-29-05-2026.sql
+  - include:
+      file: sql/add-restaurant-id-to-orders-29-05-2026-14-28.sql
+  - include:
+      file: sql/alter-modified-by-type-to-uuid-29-05-2026-16-19.sql
