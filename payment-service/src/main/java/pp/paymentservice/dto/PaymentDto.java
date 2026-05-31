@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Builder
-public record PaymentResponse(
+public record PaymentDto(
         Long paymentId,
         Long orderId,
         UUID userUuid,

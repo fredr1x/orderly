@@ -11,7 +11,9 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import pp.commonlib.domain.event.OrderPaidEvent;
+import pp.commonlib.domain.event.OrderRejectedEvent;
 import pp.commonlib.domain.event.PaymentCompletedEvent;
+import pp.commonlib.domain.event.RestaurantDecisionEvent;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
 import reactor.kafka.sender.KafkaSender;
@@ -31,31 +33,37 @@ public class KafkaConfiguration {
     @Value("${kafka.payment-topic:payment-events}")
     private String paymentEventsTopic;
 
+    @Value("${kafka.restaurant-topic:restaurant-events}")
+    private String restaurantEventsTopic;
+
     @Bean
     public SenderOptions<Long, OrderPaidEvent> orderPaidEventSenderOptions() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        Map<String, Object> props = senderProperties();
+
+        return SenderOptions.create(props);
+    }
+
+    @Bean
+    public SenderOptions<Long, OrderRejectedEvent> orderRejectedEventSenderOptions() {
+        Map<String, Object> props = senderProperties();
 
         return SenderOptions.create(props);
     }
 
     @Bean
     public ReceiverOptions<Long, PaymentCompletedEvent> paymentCompletedEventReceiverOptions() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "order-group");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-
+        Map<String, Object> props = receiverProperties();
 
         return ReceiverOptions.<Long, PaymentCompletedEvent>create(props)
                 .subscription(List.of(paymentEventsTopic));
+    }
+
+    @Bean
+    public ReceiverOptions<Long, RestaurantDecisionEvent> restaurantDecisionEventReceiverOptions() {
+        Map<String, Object> props = receiverProperties();
+
+        return ReceiverOptions.<Long, RestaurantDecisionEvent>create(props)
+                .subscription(List.of(restaurantEventsTopic));
     }
 
     @Bean
@@ -64,7 +72,38 @@ public class KafkaConfiguration {
     }
 
     @Bean
+    public KafkaSender<Long, OrderRejectedEvent> orderRejectedEventKafkaSender(SenderOptions<Long, OrderRejectedEvent> orderRejectedEventSenderOptions) {
+        return KafkaSender.create(orderRejectedEventSenderOptions);
+    }
+
+    @Bean
     public KafkaReceiver<Long, PaymentCompletedEvent> paymentEventKafkaReceiver(ReceiverOptions<Long, PaymentCompletedEvent> paymentCompletedEventReceiverOptions) {
         return KafkaReceiver.create(paymentCompletedEventReceiverOptions);
+    }
+
+    @Bean
+    public KafkaReceiver<Long, RestaurantDecisionEvent> restaurantDecisionEventKafkaReceiver(ReceiverOptions<Long, RestaurantDecisionEvent> restaurantDecisionEventReceiverOptions) {
+        return KafkaReceiver.create(restaurantDecisionEventReceiverOptions);
+    }
+
+    private Map<String, Object> senderProperties() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        return props;
+    }
+
+    private Map<String, Object> receiverProperties() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "order-group");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        return props;
     }
 }

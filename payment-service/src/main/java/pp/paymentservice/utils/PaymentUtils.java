@@ -4,7 +4,7 @@ import lombok.experimental.UtilityClass;
 import pp.commonlib.domain.event.PaymentCompletedEvent;
 import pp.commonlib.domain.enums.PaymentStatus;
 import pp.paymentservice.dto.PaymentRequest;
-import pp.paymentservice.dto.PaymentResponse;
+import pp.paymentservice.dto.PaymentDto;
 import pp.paymentservice.entities.Payment;
 
 import java.time.Instant;
@@ -35,8 +35,8 @@ public class PaymentUtils {
                 .build();
     }
 
-    public PaymentResponse buildPaymentResponse(Payment payment) {
-        return PaymentResponse.builder()
+    public PaymentDto buildPaymentResponse(Payment payment) {
+        return PaymentDto.builder()
                 .paymentId(payment.getId())
                 .orderId(payment.getOrderId())
                 .userUuid(payment.getUserUuid())
