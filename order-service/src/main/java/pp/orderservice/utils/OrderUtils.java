@@ -6,6 +6,7 @@ import pp.commonlib.domain.enums.OrderStatus;
 import pp.commonlib.domain.event.OrderPaidEvent;
 import pp.orderservice.dto.OrderCreateRequest;
 import pp.orderservice.dto.OrderCreateResponse;
+import pp.orderservice.dto.OrderDto;
 import pp.orderservice.dto.OrderItemCreateResponse;
 import pp.orderservice.entity.Order;
 import pp.orderservice.entity.OrderItem;
@@ -50,6 +51,19 @@ public class OrderUtils {
                 .status(order.getStatus())
                 .totalAmount(order.getTotalAmount())
                 .items(items)
+                .build();
+    }
+
+    public OrderDto buildOrderDto(Order order, List<OrderItemDto> items) {
+        return OrderDto.builder()
+                .id(order.getId())
+                .userUuid(order.getUserUuid())
+                .restaurantId(order.getRestaurantId())
+                .address(order.getAddress())
+                .totalAmount(order.getTotalAmount())
+                .status(order.getStatus())
+                .items(items)
+                .createdAt(order.getCreatedAt())
                 .build();
     }
 }

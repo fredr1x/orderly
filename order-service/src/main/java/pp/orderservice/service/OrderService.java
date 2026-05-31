@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import pp.commonlib.domain.enums.OrderStatus;
 import pp.orderservice.dto.OrderCreateRequest;
 import pp.orderservice.dto.OrderCreateResponse;
+import pp.orderservice.dto.OrderDto;
 import pp.orderservice.entity.Order;
 import pp.orderservice.entity.OrderItem;
 import pp.orderservice.repository.OrderItemRepository;
@@ -26,6 +27,19 @@ public class OrderService {
     public Mono<Order> findById(Long id) {
         return orderRepository.findById(id)
                 .switchIfEmpty(Mono.error(new RuntimeException("Order by id " + id + " not found")));
+    }
+
+    public Mono<OrderDto> getOrderById(String currentUserId, Long orderId) {
+        return findById(orderId)
+                .flatMap(order -> {
+                    var currentUserUuid = UUID.fromString(currentUserId);
+                    if (order.getUserUuid() != currentUserUuid) return Mono.error(new RuntimeException("Not enough permissions"));
+
+                    return orderItemRepository.findAllByOrderId(order.getId())
+                            .map(OrderItemUtils::buildOrderItemDto)
+                            .collectList()
+                            .map(items -> OrderUtils.buildOrderDto(order, items));
+                });
     }
 
     public Mono<OrderCreateResponse> createOrder(String currentUserId, OrderCreateRequest request) {
@@ -56,5 +70,10 @@ public class OrderService {
             order.setStatus(orderStatus);
             return orderRepository.save(order);
         });
+    }
+
+    public Mono<Void> save(Order order) {
+        return orderRepository.save(order)
+                .then();
     }
 }

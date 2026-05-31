@@ -17,9 +17,6 @@ public interface RestaurantRatingRepository extends R2dbcRepository<RestaurantRa
 
     Mono<Boolean> existsByClientUserIdAndRestaurantIdAndStatusNot(UUID clientUserId, Long restaurantId, RatingStatus status);
 
-
-
-
     @Query("SELECT restaurant_id, AVG(rating) as avg_rating " +
            "FROM restaurant_ratings WHERE status = 'APPROVED' " +
            "GROUP BY restaurant_id")

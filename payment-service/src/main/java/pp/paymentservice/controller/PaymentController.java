@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pp.paymentservice.dto.PaymentRequest;
-import pp.paymentservice.dto.PaymentResponse;
+import pp.paymentservice.dto.PaymentDto;
 import pp.paymentservice.service.PaymentService;
 import reactor.core.publisher.Mono;
 
@@ -20,8 +20,8 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping
-    public Mono<PaymentResponse> processPayment(@AuthenticationPrincipal Jwt jwt,
-                                                @RequestBody PaymentRequest request) {
+    public Mono<PaymentDto> processPayment(@AuthenticationPrincipal Jwt jwt,
+                                           @RequestBody PaymentRequest request) {
         return paymentService.processPayment(jwt.getSubject(), request);
     }
 }

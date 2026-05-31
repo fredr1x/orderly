@@ -1,4 +1,4 @@
-package pp.paymentservice.publisher;
+package pp.paymentservice.kafka.publisher;
 
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
