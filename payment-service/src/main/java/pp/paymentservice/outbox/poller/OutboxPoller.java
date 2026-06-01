@@ -1,4 +1,4 @@
-package pp.orderservice.outbox.poller;
+package pp.paymentservice.outbox.poller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,8 +7,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import pp.commonlib.domain.outbox.OutboxStatus;
-import pp.orderservice.outbox.OutboxEvent;
-import pp.orderservice.repository.OutboxEventRepository;
+import pp.paymentservice.outbox.OutboxEvent;
+import pp.paymentservice.repository.OutboxEventRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.kafka.sender.KafkaSender;

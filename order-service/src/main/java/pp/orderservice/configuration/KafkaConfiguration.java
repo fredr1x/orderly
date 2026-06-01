@@ -62,10 +62,10 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    public SenderOptions<String, String> outboxSenderOptions() {
+    public SenderOptions<Long, String> outboxSenderOptions() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, Long.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
@@ -73,7 +73,7 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    public KafkaSender<String, String> outboxKafkaSender(SenderOptions<String, String> outboxSenderOptions) {
+    public KafkaSender<Long, String> outboxKafkaSender(SenderOptions<Long, String> outboxSenderOptions) {
         return KafkaSender.create(outboxSenderOptions);
     }
 
@@ -81,6 +81,7 @@ public class KafkaConfiguration {
     public ReceiverOptions<Long, PaymentCompletedEvent> paymentCompletedEventReceiverOptions() {
         Map<String, Object> props = receiverProperties();
 
+        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, PaymentCompletedEvent.class.getName());
         return ReceiverOptions.<Long, PaymentCompletedEvent>create(props)
                 .subscription(List.of(paymentEventsTopic));
     }
@@ -94,6 +95,7 @@ public class KafkaConfiguration {
     public ReceiverOptions<Long, RestaurantDecisionEvent> restaurantDecisionEventReceiverOptions() {
         Map<String, Object> props = receiverProperties();
 
+        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, RestaurantDecisionEvent.class.getName());
         return ReceiverOptions.<Long, RestaurantDecisionEvent>create(props)
                 .subscription(List.of(restaurantEventsTopic));
     }
