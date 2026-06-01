@@ -5,3 +5,5 @@ databaseChangeLog:
       file: sql/add-restaurant-id-to-orders-29-05-2026-14-28.sql
   - include:
       file: sql/alter-modified-by-type-to-uuid-29-05-2026-16-19.sql
+  - include:
+      file: sql/create-outbox-events-table-01-06-2026-16-45.sql

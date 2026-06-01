@@ -211,110 +211,51 @@ services:
 #    networks:
 #      - orderly-net
 
-#  restaurant-service-db:
-#    image: postgis/postgis:16-3.4
-#    environment:
-#      POSTGRES_DB: orderly-restaurants
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: postgres
-#    ports:
-#      - "5503:5432"
-#    volumes:
-#      - restaurants_volume:/var/lib/postgresql/data
-#    networks:
-#      - orderly-net
-#    healthcheck:
-#      test: [ "CMD-SHELL", "pg_isready -U postgres -d orderly-restaurants" ]
-#      interval: 5s
-#      timeout: 5s
-#      retries: 10
-
-#  restaurant-service-liquibase:
-#    image: liquibase/liquibase:4.25
-#    restart: "no"
-#    depends_on:
-#      restaurant-service-db:
-#        condition: service_healthy
-#    volumes:
-#      - ./restaurant-service/src/main/resources/db/changelog:/liquibase/changelog
-#    command: update
-#    environment:
-#      LIQUIBASE_COMMAND_URL: jdbc:postgresql://restaurant-service-db:5432/orderly-restaurants
-#      LIQUIBASE_COMMAND_USERNAME: postgres
-#      LIQUIBASE_COMMAND_PASSWORD: postgres
-#      LIQUIBASE_COMMAND_CHANGELOG_FILE: changelog/db.changelog-master.yaml
-#    networks:
-#      - orderly-net
-
-#  restaurant-service:
-#    build:
-#      context: .
-#      dockerfile: restaurant-service/Dockerfile
-#    env_file:
-#      - .env.restaurant-service
-#    ports:
-#      - "8085:8085"
-#    depends_on:
-##      restaurant-service-liquibase:
-##        condition: service_completed_successfully
-#      eureka-server:
-#        condition: service_healthy
-#      keycloak:
-#        condition: service_started
-##      redis:
-##        condition: service_healthy
-#      minio:
-#        condition: service_started
-#      kafka:
-#        condition: service_started
-#    networks:
-#      - orderly-net
-#
-  payment-service-db:
+  restaurant-service-db:
     image: postgis/postgis:16-3.4
     environment:
-      POSTGRES_DB: orderly-payments
+      POSTGRES_DB: orderly-restaurants
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5504:5432"
+      - "5503:5432"
     volumes:
-      - payments_volume:/var/lib/postgresql/data
+      - restaurants_volume:/var/lib/postgresql/data
     networks:
       - orderly-net
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d orderly-payments" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d orderly-restaurants" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  payment-service-liquibase:
+  restaurant-service-liquibase:
     image: liquibase/liquibase:4.25
     restart: "no"
     depends_on:
-      payment-service-db:
+      restaurant-service-db:
         condition: service_healthy
     volumes:
-      - ./payment-service/src/main/resources/db/changelog:/liquibase/changelog
+      - ./restaurant-service/src/main/resources/db/changelog:/liquibase/changelog
     command: update
     environment:
-      LIQUIBASE_COMMAND_URL: jdbc:postgresql://payment-service-db:5432/orderly-payments
+      LIQUIBASE_COMMAND_URL: jdbc:postgresql://restaurant-service-db:5432/orderly-restaurants
       LIQUIBASE_COMMAND_USERNAME: postgres
       LIQUIBASE_COMMAND_PASSWORD: postgres
       LIQUIBASE_COMMAND_CHANGELOG_FILE: changelog/db.changelog-master.yaml
     networks:
       - orderly-net
 
-  payment-service:
+  restaurant-service:
     build:
       context: .
-      dockerfile: payment-service/Dockerfile
-    environment:
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      dockerfile: restaurant-service/Dockerfile
+    env_file:
+      - .env.restaurant-service
     ports:
-      - "8086:8086"
+      - "8085:8085"
     depends_on:
-      payment-service-liquibase:
+      restaurant-service-liquibase:
         condition: service_completed_successfully
       eureka-server:
         condition: service_healthy
@@ -322,10 +263,69 @@ services:
         condition: service_started
 #      redis:
 #        condition: service_healthy
+      minio:
+        condition: service_started
       kafka:
         condition: service_started
     networks:
       - orderly-net
+#
+#  payment-service-db:
+#    image: postgis/postgis:16-3.4
+#    environment:
+#      POSTGRES_DB: orderly-payments
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres
+#    ports:
+#      - "5504:5432"
+#    volumes:
+#      - payments_volume:/var/lib/postgresql/data
+#    networks:
+#      - orderly-net
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U postgres -d orderly-payments" ]
+#      interval: 5s
+#      timeout: 5s
+#      retries: 10
+#
+#  payment-service-liquibase:
+#    image: liquibase/liquibase:4.25
+#    restart: "no"
+#    depends_on:
+#      payment-service-db:
+#        condition: service_healthy
+#    volumes:
+#      - ./payment-service/src/main/resources/db/changelog:/liquibase/changelog
+#    command: update
+#    environment:
+#      LIQUIBASE_COMMAND_URL: jdbc:postgresql://payment-service-db:5432/orderly-payments
+#      LIQUIBASE_COMMAND_USERNAME: postgres
+#      LIQUIBASE_COMMAND_PASSWORD: postgres
+#      LIQUIBASE_COMMAND_CHANGELOG_FILE: changelog/db.changelog-master.yaml
+#    networks:
+#      - orderly-net
+#
+#  payment-service:
+#    build:
+#      context: .
+#      dockerfile: payment-service/Dockerfile
+#    environment:
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#    ports:
+#      - "8086:8086"
+#    depends_on:
+#      payment-service-liquibase:
+#        condition: service_completed_successfully
+#      eureka-server:
+#        condition: service_healthy
+#      keycloak:
+#        condition: service_started
+##      redis:
+##        condition: service_healthy
+#      kafka:
+#        condition: service_started
+#    networks:
+#      - orderly-net
 
   kafka:
     image: apache/kafka:latest

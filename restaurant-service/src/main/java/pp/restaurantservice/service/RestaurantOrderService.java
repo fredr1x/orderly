@@ -2,13 +2,16 @@ package pp.restaurantservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import pp.commonlib.domain.enums.RestaurantDecision;
 import pp.commonlib.domain.event.OrderPaidEvent;
+import pp.commonlib.domain.outbox.EventType;
 import pp.restaurantservice.dto.RestaurantOrderDto;
 import pp.restaurantservice.entity.enums.RestaurantOrderStatus;
-import pp.restaurantservice.kafka.publisher.RestaurantDecisionEventPublisher;
+import pp.restaurantservice.repository.OutboxEventRepository;
 import pp.restaurantservice.repository.RestaurantOrderItemRepository;
 import pp.restaurantservice.repository.RestaurantOrderRepository;
+import pp.restaurantservice.utils.OutboxEventUtils;
 import pp.restaurantservice.utils.RestaurantOrderItemUtils;
 import pp.restaurantservice.utils.RestaurantOrderUtils;
 import reactor.core.publisher.Flux;
@@ -26,8 +29,9 @@ public class RestaurantOrderService {
 
     private final RestaurantStaffService restaurantStaffService;
     private final RestaurantOrderItemService restaurantOrderItemService;
-
-    private final RestaurantDecisionEventPublisher restaurantDecisionEventPublisher;
+    private final OutboxEventUtils outboxEventUtils;
+    private final OutboxEventRepository outboxEventRepository;
+    private final TransactionalOperator transactionalOperator;
 
     public Flux<RestaurantOrderDto> getAllRestaurantOrdersByStatus(
             String currentUserId,
@@ -101,16 +105,24 @@ public class RestaurantOrderService {
                             );
                 })
                 .flatMap(dto ->
-                        restaurantDecisionEventPublisher
-                                .publishRestaurantDecisionEvent(
-                                        RestaurantOrderUtils.buildRestaurantDecisionEvent(
-                                                dto.orderId(),
-                                                dto.status() == RestaurantOrderStatus.APPROVED
-                                                        ? RestaurantDecision.APPROVED
-                                                        : RestaurantDecision.REJECTED
-                                        )
-                                )
-                                .thenReturn(dto)
-                );
+                        Mono.defer(() -> {
+                            var restaurantDecisionEvent = RestaurantOrderUtils.buildRestaurantDecisionEvent(
+                                    dto.orderId(),
+                                    dto.status() == RestaurantOrderStatus.APPROVED
+                                            ? RestaurantDecision.APPROVED
+                                            : RestaurantDecision.REJECTED
+                            );
+
+                            var outboxEvent = outboxEventUtils.create(
+                                    dto.orderId(),
+                                    EventType.RESTAURANT_DECISION_EVENT,
+                                    restaurantDecisionEvent
+                            );
+
+                            return outboxEventRepository.save(outboxEvent)
+                                    .thenReturn(dto);
+                        })
+                )
+                .as(transactionalOperator::transactional);
     }
 }

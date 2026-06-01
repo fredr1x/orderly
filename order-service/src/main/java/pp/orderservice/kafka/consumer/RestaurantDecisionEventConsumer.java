@@ -45,29 +45,24 @@ public class RestaurantDecisionEventConsumer {
     private Mono<Void> processRestaurantDecisionEvent(RestaurantDecisionEvent event) {
         return orderService.findById(event.orderId())
                 .flatMap(order -> {
-                    log.info("Processing received RestaurantDecisionEvent with status: {}", event.decision().name());
-                    if (event.decision() == RestaurantDecision.APPROVED)
+                    log.info("Processing RestaurantDecisionEvent, decision={}", event.decision());
+
+                    if (event.decision() == RestaurantDecision.APPROVED) {
                         order.setStatus(OrderStatus.RESTAURANT_PREPARING);
-
-                    else if (event.decision() == RestaurantDecision.REJECTED) {
-                        order.setStatus(OrderStatus.RESTAURANT_REJECTED);
-                        var orderRejectedEvent = OrderRejectedEvent
-                                .builder()
-                                .orderId(order.getId())
-                                .build();
-
-                        var outboxEvent = outboxEventUtils.create(
-                                event.orderId(),
-                                EventType.ORDER_REJECTED_EVENT,
-                                orderRejectedEvent
-                        );
-
-                        return outboxEventRepository.save(outboxEvent)
-                                .thenReturn(order);
+                        return orderService.save(order);
                     }
 
-                    log.info("Saving order with updated status: {}", order.getStatus());
-                    return orderService.save(order);
+                    order.setStatus(OrderStatus.RESTAURANT_REJECTED);
+                    var outboxEvent = outboxEventUtils.create(
+                            event.orderId(),
+                            EventType.ORDER_REJECTED_EVENT,
+                            OrderRejectedEvent.builder()
+                                    .orderId(order.getId())
+                                    .build()
+                    );
+
+                    return orderService.save(order)
+                            .then(outboxEventRepository.save(outboxEvent));
                 })
                 .as(transactionalOperator::transactional)
                 .then();

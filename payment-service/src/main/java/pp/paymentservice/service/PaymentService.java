@@ -42,6 +42,7 @@ public class PaymentService {
                                 return Mono.error(new RuntimeException(
                                         "Can not process payment, payment status: " + paymentStatus));
                             }
+                            payment.setStatus(PaymentStatus.PAYMENT_SUCCEEDED);
                             return paymentRepository.save(payment);
                         })
                         .switchIfEmpty(Mono.defer(() ->
@@ -59,8 +60,8 @@ public class PaymentService {
                             return outboxEventRepository.save(outboxEvent)
                                     .thenReturn(payment);
                         })
-                        .as(transactionalOperator::transactional)
                         .map(PaymentUtils::buildPaymentResponse)
+                        .as(transactionalOperator::transactional)
         );
     }
 
