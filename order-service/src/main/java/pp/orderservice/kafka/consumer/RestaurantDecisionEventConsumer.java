@@ -4,12 +4,15 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import pp.commonlib.domain.enums.OrderStatus;
 import pp.commonlib.domain.enums.RestaurantDecision;
 import pp.commonlib.domain.event.OrderRejectedEvent;
 import pp.commonlib.domain.event.RestaurantDecisionEvent;
-import pp.orderservice.kafka.publisher.OrderRejectedEventPublisher;
+import pp.commonlib.domain.outbox.EventType;
+import pp.orderservice.repository.OutboxEventRepository;
 import pp.orderservice.service.OrderService;
+import pp.orderservice.utils.OutboxEventUtils;
 import reactor.core.publisher.Mono;
 import reactor.kafka.receiver.KafkaReceiver;
 
@@ -19,9 +22,11 @@ import reactor.kafka.receiver.KafkaReceiver;
 public class RestaurantDecisionEventConsumer {
 
     private final KafkaReceiver<Long, RestaurantDecisionEvent> receiver;
-    private final OrderRejectedEventPublisher orderRejectedEventPublisher;
 
     private final OrderService orderService;
+    private final OutboxEventRepository outboxEventRepository;
+    private final OutboxEventUtils outboxEventUtils;
+    private final TransactionalOperator transactionalOperator;
 
     @PostConstruct
     public void consume() {
@@ -46,19 +51,25 @@ public class RestaurantDecisionEventConsumer {
 
                     else if (event.decision() == RestaurantDecision.REJECTED) {
                         order.setStatus(OrderStatus.RESTAURANT_REJECTED);
-                        return orderRejectedEventPublisher
-                                .publishOrderRejectedEvent(
-                                        OrderRejectedEvent
-                                                .builder()
-                                                .orderId(order.getId())
-                                                .build()
-                                )
+                        var orderRejectedEvent = OrderRejectedEvent
+                                .builder()
+                                .orderId(order.getId())
+                                .build();
+
+                        var outboxEvent = outboxEventUtils.create(
+                                event.orderId(),
+                                EventType.ORDER_REJECTED_EVENT,
+                                orderRejectedEvent
+                        );
+
+                        return outboxEventRepository.save(outboxEvent)
                                 .thenReturn(order);
                     }
 
                     log.info("Saving order with updated status: {}", order.getStatus());
                     return orderService.save(order);
                 })
+                .as(transactionalOperator::transactional)
                 .then();
     }
 }

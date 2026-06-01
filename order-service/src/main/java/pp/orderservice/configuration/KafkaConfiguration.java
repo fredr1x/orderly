@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.LongSerializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,10 +45,36 @@ public class KafkaConfiguration {
     }
 
     @Bean
+    public KafkaSender<Long, OrderPaidEvent> orderPaidEventSender(SenderOptions<Long, OrderPaidEvent> orderPaidEventSenderOptions) {
+        return KafkaSender.create(orderPaidEventSenderOptions);
+    }
+
+    @Bean
     public SenderOptions<Long, OrderRejectedEvent> orderRejectedEventSenderOptions() {
         Map<String, Object> props = senderProperties();
 
         return SenderOptions.create(props);
+    }
+
+    @Bean
+    public KafkaSender<Long, OrderRejectedEvent> orderRejectedEventKafkaSender(SenderOptions<Long, OrderRejectedEvent> orderRejectedEventSenderOptions) {
+        return KafkaSender.create(orderRejectedEventSenderOptions);
+    }
+
+    @Bean
+    public SenderOptions<String, String> outboxSenderOptions() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        return SenderOptions.create(props);
+    }
+
+    @Bean
+    public KafkaSender<String, String> outboxKafkaSender(SenderOptions<String, String> outboxSenderOptions) {
+        return KafkaSender.create(outboxSenderOptions);
     }
 
     @Bean
@@ -59,26 +86,16 @@ public class KafkaConfiguration {
     }
 
     @Bean
+    public KafkaReceiver<Long, PaymentCompletedEvent> paymentEventKafkaReceiver(ReceiverOptions<Long, PaymentCompletedEvent> paymentCompletedEventReceiverOptions) {
+        return KafkaReceiver.create(paymentCompletedEventReceiverOptions);
+    }
+
+    @Bean
     public ReceiverOptions<Long, RestaurantDecisionEvent> restaurantDecisionEventReceiverOptions() {
         Map<String, Object> props = receiverProperties();
 
         return ReceiverOptions.<Long, RestaurantDecisionEvent>create(props)
                 .subscription(List.of(restaurantEventsTopic));
-    }
-
-    @Bean
-    public KafkaSender<Long, OrderPaidEvent> orderPaidEventSender(SenderOptions<Long, OrderPaidEvent> orderPaidEventSenderOptions) {
-        return KafkaSender.create(orderPaidEventSenderOptions);
-    }
-
-    @Bean
-    public KafkaSender<Long, OrderRejectedEvent> orderRejectedEventKafkaSender(SenderOptions<Long, OrderRejectedEvent> orderRejectedEventSenderOptions) {
-        return KafkaSender.create(orderRejectedEventSenderOptions);
-    }
-
-    @Bean
-    public KafkaReceiver<Long, PaymentCompletedEvent> paymentEventKafkaReceiver(ReceiverOptions<Long, PaymentCompletedEvent> paymentCompletedEventReceiverOptions) {
-        return KafkaReceiver.create(paymentCompletedEventReceiverOptions);
     }
 
     @Bean

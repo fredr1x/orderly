@@ -17,10 +17,10 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @GetMapping("/{orderId}")
+    @GetMapping("/{id}")
     public Mono<OrderDto> getOrderById(@AuthenticationPrincipal Jwt jwt,
-                                       @PathVariable Long orderId) {
-        return orderService.getOrderById(jwt.getSubject(), orderId);
+                                       @PathVariable Long id) {
+        return orderService.getOrderById(jwt.getSubject(), id);
     }
 
     @PostMapping
