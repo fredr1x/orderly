@@ -5,3 +5,5 @@ databaseChangeLog:
       file: sql/remove-enum-make-varchar-26-05-2026-18-35.sql
   - include:
       file: sql/add-unique-constraint-for-payment-27-05-2026-10-41.sql
+  - include:
+      file: sql/create-outbox-events-table-01-06-2026-15-46.sql
