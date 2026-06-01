@@ -46,32 +46,33 @@ public class PaymentCompletedEventConsumer {
     private Mono<Void> processPaymentCompletedEvent(PaymentCompletedEvent event) {
         return Mono.defer(() -> {
                     if (event.status() == PaymentStatus.PAYMENT_FAILED) {
-                        log.error("Failed to process payment, payment status: {}",
-                                event.status().name());
-                        return Mono.error(new RuntimeException(
-                                "Payment for order " + event.orderId() + " failed"));
+                        log.warn("Payment failed for order {}, cancelling order", event.orderId());
+                        return orderService.updateOrderStatus(
+                                event.orderId(),
+                                OrderStatus.CANCELLED
+                        )
+                        .then();
                     }
 
                     return orderService.updateOrderStatus(
-                            event.orderId(),
-                            OrderStatus.AWAITING_RESTAURANT_CONFIRMATION
-                    );
+                                    event.orderId(),
+                                    OrderStatus.AWAITING_RESTAURANT_CONFIRMATION
+                            )
+                            .flatMap(order ->
+                                    orderItemService.getItemsByOrderId(order.getId())
+                                            .collectList()
+                                            .map(items -> OrderUtils.buildOrderPaidEvent(order, items))
+                            )
+                            .flatMap(orderPaidEvent -> {
+                                var outboxEvent = outboxEventUtils.create(
+                                        event.orderId(),
+                                        EventType.ORDER_PAID_EVENT,
+                                        orderPaidEvent
+                                );
+                                return outboxEventRepository.save(outboxEvent);
+                            })
+                            .then();
                 })
-                .flatMap(order ->
-                        orderItemService.getItemsByOrderId(order.getId())
-                                .collectList()
-                                .map(items -> OrderUtils.buildOrderPaidEvent(order, items))
-                                .flatMap(orderPaidEvent -> {
-                                    var outboxEvent = outboxEventUtils.create(
-                                            event.orderId(),
-                                            EventType.PAYMENT_COMPLETED_EVENT,
-                                            orderPaidEvent
-                                    );
-
-                                    return outboxEventRepository.save(outboxEvent);
-                                })
-                )
-                .as(transactionalOperator::transactional)
-                .then();
+                .as(transactionalOperator::transactional);
     }
 }
