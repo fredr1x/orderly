@@ -4,13 +4,16 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import pp.commonlib.domain.enums.OrderStatus;
 import pp.commonlib.domain.enums.PaymentStatus;
 import pp.commonlib.domain.event.PaymentCompletedEvent;
-import pp.orderservice.kafka.publisher.OrderPaidEventPublisher;
+import pp.commonlib.domain.outbox.EventType;
+import pp.orderservice.repository.OutboxEventRepository;
 import pp.orderservice.service.OrderItemService;
 import pp.orderservice.service.OrderService;
 import pp.orderservice.utils.OrderUtils;
+import pp.orderservice.utils.OutboxEventUtils;
 import reactor.core.publisher.Mono;
 import reactor.kafka.receiver.KafkaReceiver;
 
@@ -21,8 +24,10 @@ public class PaymentCompletedEventConsumer {
 
     private final OrderService orderService;
     private final KafkaReceiver<Long, PaymentCompletedEvent> receiver;
-    private final OrderPaidEventPublisher orderPaidEventPublisher;
     private final OrderItemService orderItemService;
+    private final OutboxEventUtils outboxEventUtils;
+    private final OutboxEventRepository outboxEventRepository;
+    private final TransactionalOperator transactionalOperator;
 
     @PostConstruct
     public void consume() {
@@ -56,8 +61,17 @@ public class PaymentCompletedEventConsumer {
                         orderItemService.getItemsByOrderId(order.getId())
                                 .collectList()
                                 .map(items -> OrderUtils.buildOrderPaidEvent(order, items))
-                                .flatMap(orderPaidEventPublisher::publishOrderPaidEvent)
+                                .flatMap(orderPaidEvent -> {
+                                    var outboxEvent = outboxEventUtils.create(
+                                            event.orderId(),
+                                            EventType.PAYMENT_COMPLETED_EVENT,
+                                            orderPaidEvent
+                                    );
+
+                                    return outboxEventRepository.save(outboxEvent);
+                                })
                 )
+                .as(transactionalOperator::transactional)
                 .then();
     }
 }

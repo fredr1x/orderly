@@ -29,6 +29,7 @@ eureka:
 kafka:
   payment-topic: "payment-events"
   order-topic: "order-events"
+  restaurant-topic: "restaurant-events"
 
 logging:
   level:
